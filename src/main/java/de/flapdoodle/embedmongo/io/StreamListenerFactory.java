@@ -1,6 +1,7 @@
 package de.flapdoodle.embedmongo.io;
 
 
+
 public class StreamListenerFactory {
 
 	private static final String STD_PREFIX = "[mongod std] ";
@@ -11,6 +12,10 @@ public class StreamListenerFactory {
 		if(isSlf4jAvailable()){
 			org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Slf4jStreamListener.class);
 			return new Slf4jStreamListener(logger, Slf4jStreamListener.Level.INFO, STD_PREFIX);
+		}
+		if(isLog4jAvailable()){
+			org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Log4jStreamListener.class);
+			return new Log4jStreamListener(logger, org.apache.log4j.Level.INFO, STD_PREFIX);
 		}
 		if(fallbackToJdkLogging) {
 			java.util.logging.Logger logger = java.util.logging.Logger.getLogger(JdkLoggingStreamListener.class.getName());
@@ -24,6 +29,10 @@ public class StreamListenerFactory {
 			org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Slf4jStreamListener.class);
 			return new Slf4jStreamListener(logger, Slf4jStreamListener.Level.ERROR, ERR_PREFIX);
 		}
+		if(isLog4jAvailable()){
+			org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Log4jStreamListener.class);
+			return new Log4jStreamListener(logger, org.apache.log4j.Level.ERROR, ERR_PREFIX);
+		}
 		if(fallbackToJdkLogging) {
 			java.util.logging.Logger logger = java.util.logging.Logger.getLogger(JdkLoggingStreamListener.class.getName());
 			return new JdkLoggingStreamListener(logger, java.util.logging.Level.SEVERE, ERR_PREFIX);
@@ -34,6 +43,15 @@ public class StreamListenerFactory {
 	private static boolean isSlf4jAvailable() {
 		try {
 			Class.forName("org.slf4j.Logger");
+			return true;
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	private static boolean isLog4jAvailable() {
+		try {
+			Class.forName("org.apache.log4j.Logger");
 			return true;
 		} catch (ClassNotFoundException e) {
 			return false;
