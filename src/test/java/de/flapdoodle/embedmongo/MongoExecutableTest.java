@@ -71,30 +71,4 @@ public class MongoExecutableTest extends TestCase {
 
 	}
 
-
-	@Test
-	public void testStartStopWithDifferentVersions() throws IOException {
-		boolean useMongodb=true;
-		
-		for(Version version : Version.values()){
-			MongodConfig mongodConfig = new MongodConfig(version, 12345,
-					Network.localhostIsIPv6());
-			
-			MongodExecutable mongodExe = MongoDBRuntime.getDefaultInstance().prepare(mongodConfig);
-			MongodProcess mongod = mongodExe.start();
-		
-			if (useMongodb) {
-				Mongo mongo = new Mongo(new ServerAddress(Network.getLocalHost(), mongodConfig.getPort()));
-				DB db = mongo.getDB("test");
-				DBCollection col = db.createCollection("testCol", new BasicDBObject());
-				col.save(new BasicDBObject("testDoc", new Date()));
-			}
-			
-			mongod.stop();
-			mongodExe.cleanup();
-		}
-
-	}
-
-
 }
