@@ -17,135 +17,211 @@
  */
 package de.flapdoodle.embedmongo;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+
 import de.flapdoodle.embedmongo.config.MongodConfig;
-import de.flapdoodle.embedmongo.distribution.Distribution;
-import de.flapdoodle.embedmongo.io.BlockLogWatchProcessor;
-import de.flapdoodle.embedmongo.io.Processors;
-import de.flapdoodle.embedmongo.runtime.Mongod;
-import de.flapdoodle.embedmongo.runtime.Network;
-import de.flapdoodle.embedmongo.runtime.ProcessControl;
+import de.flapdoodle.embedmongo.io.IStreamListener;
+import de.flapdoodle.embedmongo.io.StreamConsumer;
+import de.flapdoodle.embedmongo.runtime.NUMA;
+import de.flapdoodle.embedmongo.runtime.ProcessShutdownWatcher;
 
 public class MongodProcess {
 
-	static final Logger _logger = Logger.getLogger(MongodProcess.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(MongodProcess.class.getName());
 
-	private final MongodConfig _config;
-	private final MongodExecutable _mongodExecutable;
-	private ProcessControl _process;
-	private int _mongodProcessId;
-//	private ConsoleOutput _consoleOutput;
+	private final MongodExecutable mongodExecutable;
+	
+	private final MongodConfig mongodConfig;
+	
+	private Process process;
 
-	private File _dbDir;
+	private boolean stopped = false;
 
-	boolean _stopped = false;
+	private StreamConsumer stdStreamConsumer;
 
-	private Distribution _distribution;
-
-	public MongodProcess(Distribution distribution, MongodConfig config, MongodExecutable mongodExecutable)
-			throws IOException {
-		_config = config;
-		_mongodExecutable = mongodExecutable;
-		_distribution = distribution;
-
+	private StreamConsumer errStreamConsumer;
+	
+	public MongodProcess(MongodConfig mongodConfig, MongodExecutable mongodExecutable) throws IOException {
+		
+		this.mongodExecutable = mongodExecutable;
+		this.mongodConfig = mongodConfig;
+		
 		try {
-			File dbDir;
-			if (config.getDatabaseDir() != null) {
-				dbDir = Files.createOrCheckDir(config.getDatabaseDir());
-			} else {
-				dbDir = Files.createTempDir("embedmongo-db");
-				_dbDir = dbDir;
-			}
-			//			ProcessBuilder processBuilder = new ProcessBuilder(enhanceCommandLinePlattformSpecific(distribution,
-			//					getCommandLine(_config, _mongodExecutable.getFile(), dbDir)));
-			//			processBuilder.redirectErrorStream();
-			//			_process = new ProcessControl(processBuilder.start());
-			_process = ProcessControl.fromCommandLine(Mongod.enhanceCommandLinePlattformSpecific(distribution,
-					Mongod.getCommandLine(_config, _mongodExecutable.getFile(), dbDir)));
-
-			Runtime.getRuntime().addShutdownHook(new JobKiller());
-
-			BlockLogWatchProcessor logWatch = new BlockLogWatchProcessor("waiting for connections on port", "failed", Processors.namedConsole("[mongod output]"));
-			Processors.connect(_process.getReader(), logWatch);
-			Processors.connect(_process.getError(), Processors.namedConsole("[mongod error]"));
-			logWatch.waitForResult(20000);
-			
-//			LogWatch logWatch = LogWatch.watch(_process.getReader(), "waiting for connections on port", "failed", 20000);
-			if (logWatch.isInitWithSuccess()) {
-				_mongodProcessId = Mongod.getMongodProcessId(logWatch.getOutput(), -1);
-//				ConsoleOutput consoleOutput = new ConsoleOutput(_process.getReader());
-			} else {
+			List<String> commandLine = buildCommandLine();
+			ProcessBuilder processBuilder = new ProcessBuilder(commandLine);
+			processBuilder.redirectErrorStream(mongodConfig.isRedirectErrorStream());
+			process = processBuilder.start();
+			Runtime.getRuntime().addShutdownHook(new MongodProcessStopper());
+			ProcessStartListener statusListener = startStreamConsumers();
+			boolean started = statusListener.waitForProcessStarted(mongodConfig.getStartTimeout());
+			if ( ! started) {
 				throw new IOException("Could not start mongod process");
 			}
-
-		} catch (IOException iox) {
+		} catch (IOException io) {
 			stop();
-			throw iox;
+			throw io;
 		}
+
 	}
 
 
 	public synchronized void stop() {
-		if (!_stopped) {
-
-			_logger.warning("try to stop mongod");
-			if (!sendKillToMongodProcess()) {
-				_logger.warning("could not stop mongod, try next");
-				if (!sendStopToMongoInstance()) {
-					_logger.warning("could not stop mongod with db command, try next");
-					if (!tryKillToMongodProcess()) {
-						_logger.warning("could not stop mongod the second time, try one last thing");
-					}
+		if (!stopped) {
+			if (process != null) {
+				try {
+					sendShutdownCommand();
+					waitForProcessStopped();
+					stopStreamConsumers();
+				} catch (IOException e) {
+					LOGGER.severe(e.getMessage());
+				} catch (InterruptedException e) {
+					LOGGER.severe(e.getMessage());
+				} finally {
+					process.destroy();
 				}
 			}
-
-			_process.stop();
-
-			if ((_dbDir != null) && (!Files.forceDelete(_dbDir)))
-				_logger.warning("Could not delete temp db dir: " + _dbDir);
-
-//			if (_mongodExecutable.getFile() != null) {
-//				if (!Files.forceDelete(_mongodExecutable.getFile())) {
-//					_stopped = true;
-//					_logger.warning("Could not delete mongod executable NOW: " + _mongodExecutable.getFile());
-//				}
-//			}
+			try {
+				if ((mongodConfig.getDatabaseDir() != null) && (!Files.forceDelete(mongodConfig.getDatabaseDir())))
+					LOGGER.warning("Could not delete temp db dir: " + mongodConfig.getDatabaseDir());
+			} catch (IOException e) {
+				//nothing more we can do
+			}
+			stopped = true;
 		}
 	}
 
-	private boolean sendStopToMongoInstance() {
+	protected List<String> buildCommandLine() throws IOException {
+		List<String> ret = new ArrayList<String>();
+		ret.addAll(
+			Arrays.asList(
+				mongodExecutable.getFile().getAbsolutePath(), 
+				"-v", 
+				"--port", "" + mongodConfig.getPort(), 
+				"--dbpath", mongodConfig.getDatabaseDir().getAbsolutePath(), 
+				"--noprealloc", 
+				"--nohttpinterface", 
+				"--smallfiles"));
+		if(mongodConfig.isIpv6()) ret.add("--ipv6");
+		if (NUMA.isNUMA(mongodExecutable.getDistribution().getPlatform())) {
+			switch (mongodExecutable.getDistribution().getPlatform()) {
+				case Linux:
+					ret.add("numactl");
+					ret.add("--interleave=all");
+					return ret;
+				default:
+					LOGGER.warning("NUMA Plattform detected, but not supported.");
+			}
+		}
+		return ret;
+	}
+
+	protected ProcessStartListener startStreamConsumers() throws UnsupportedEncodingException {
+		ProcessStartListener startListener = new ProcessStartListener();
+		//standard output
+		BufferedReader stdReader = new BufferedReader(new InputStreamReader(process.getInputStream(), mongodConfig.getEncoding()), mongodConfig.getBufferLength());
+		List<IStreamListener> standardOutputListeners = mongodConfig.getStandardStreamListeners();
+		stdStreamConsumer = new StreamConsumer("Mongo Std Output", stdReader, standardOutputListeners);
+		stdStreamConsumer.addListener(startListener);
+		stdStreamConsumer.setDaemon(true);
+		stdStreamConsumer.start();
+		//error output
+		if( ! mongodConfig.isRedirectErrorStream()) {
+			BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), mongodConfig.getEncoding()), mongodConfig.getBufferLength());
+			errStreamConsumer = new StreamConsumer("Mongo Err Output", errReader, mongodConfig.getErrorStreamListeners());
+			errStreamConsumer.addListener(startListener);
+			errStreamConsumer.setDaemon(true);
+			errStreamConsumer.start();
+		}
+		return startListener;
+	}
+
+	protected void sendShutdownCommand() throws UnknownHostException {
+		//do NOT use "localhost", we need the raw IP to get through without authentication
+		Mongo mongo = new Mongo("127.0.0.1", mongodConfig.getPort());
+		//annoying: the driver prints the whole stack trace
+		Logger logger = Logger.getLogger("com.mongodb");
+		Level level = logger.getLevel();
 		try {
-			return Mongod.sendShutdown(Network.getLocalHost(), _config.getPort());
-		} catch (UnknownHostException e) {
-			_logger.log(Level.SEVERE, "sendStop", e);
+			logger.setLevel(Level.OFF);
+			mongo.getDB("admin").command(new BasicDBObject("shutdown",1));
+		} catch (MongoException e) {
+		} finally {
+			logger.setLevel(level);
+			mongo.close();
 		}
-		return false;
 	}
 
-	private boolean sendKillToMongodProcess() {
-		if (_mongodProcessId != -1) {
-			return ProcessControl.killProcess(_distribution.getPlatform(), _mongodProcessId);
+	protected void stopStreamConsumers() throws InterruptedException {
+		if(stdStreamConsumer != null) {
+			stdStreamConsumer.join(mongodConfig.getShutdownTimeout());
 		}
-		return false;
+		if(errStreamConsumer != null) {
+			errStreamConsumer.join(mongodConfig.getShutdownTimeout());
+		}
 	}
 
-	private boolean tryKillToMongodProcess() {
-		if (_mongodProcessId != -1) {
-			return ProcessControl.tryKillProcess(_distribution.getPlatform(), _mongodProcessId);
+	protected void waitForProcessStopped() {
+		ProcessShutdownWatcher t = new ProcessShutdownWatcher(process);
+		t.start();
+		try {
+			t.join(mongodConfig.getShutdownTimeout());
+		} catch (InterruptedException e1) {
 		}
-		return false;
+		if (!t.isShutdown()) {
+			throw new IllegalStateException("Couldn't stop mongod process!");
+		}
 	}
 
-	class JobKiller extends Thread {
 
+	private static class ProcessStartListener implements IStreamListener {
+
+		private static final String SUCCESS_MSG = "waiting for connections on port";
+		
+		private CountDownLatch latch = new CountDownLatch(1);
+
+		private boolean success = false;
+
+		@Override
+		public void println(String line) {
+			if( ! success) {
+				if (line.indexOf(SUCCESS_MSG) != -1) {
+					success = true;
+					latch.countDown();
+				}
+			}
+		}
+
+		public boolean waitForProcessStarted(long timeout) {
+			try {
+				latch.await(timeout, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				return false;
+			}
+			return success;
+		}
+
+	}
+	
+	private class MongodProcessStopper extends Thread {
 		@Override
 		public void run() {
 			MongodProcess.this.stop();
 		}
 	}
+
 }

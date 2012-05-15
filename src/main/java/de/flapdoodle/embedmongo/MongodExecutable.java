@@ -42,6 +42,10 @@ public class MongodExecutable {
 		Runtime.getRuntime().addShutdownHook(new JobKiller());
 	}
 
+	public Distribution getDistribution() {
+		return _distribution;
+	}
+
 	public synchronized void cleanup() {
 		if (!_stopped) {
 			if (_mongodExecutable.exists() &&  !Files.forceDelete(_mongodExecutable))
@@ -64,7 +68,7 @@ public class MongodExecutable {
 	}
 
 	public MongodProcess start() throws IOException {
-		return new MongodProcess(_distribution,_mongodConfig,this);
+		return new MongodProcess(_mongodConfig,this);
 	}
 
 }

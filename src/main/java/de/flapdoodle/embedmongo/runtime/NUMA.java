@@ -17,17 +17,16 @@
  */
 package de.flapdoodle.embedmongo.runtime;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.flapdoodle.embedmongo.collections.Collections;
 import de.flapdoodle.embedmongo.distribution.Platform;
-import de.flapdoodle.embedmongo.io.Readers;
+import de.flapdoodle.embedmongo.io.StreamCapturer;
+import de.flapdoodle.embedmongo.io.StreamGobbler;
 
 
 public class NUMA {
@@ -48,13 +47,23 @@ public class NUMA {
 	public static boolean isNUMAOnce(Platform platform) {
 		if (platform==Platform.Linux) {
 			try {
-				ProcessControl process = ProcessControl.fromCommandLine(Collections.newArrayList("grep","NUMA=y","/boot/config-`uname -r`"));
-				Reader reader = process.getReader();
-				String content=Readers.readAll(reader);
-				process.stop();
-				boolean isNUMA = !content.isEmpty();
+				ProcessBuilder processBuilder = new ProcessBuilder(Collections.newArrayList("grep","NUMA=y","/boot/config-`uname -r`"));
+				Process process = processBuilder.start();
+				StreamGobbler err = new StreamGobbler("grep err", process.getErrorStream());
+				StreamCapturer std = new StreamCapturer("grep std", process.getInputStream());
+				ProcessShutdownWatcher t = new ProcessShutdownWatcher(process);
+				t.start();
+				err.start();
+				std.start();
+				t.join(5000);
+				err.join(5000);
+				std.join(5000);
+				process.destroy();
+				String contents = std.getContents();
+				boolean isNUMA = !contents.isEmpty();
 				if (isNUMA) {
-					_logger.warning("-----------------------------------------------\n"+
+					_logger.warning(
+					"-----------------------------------------------\n"+
 					"NUMA support is still alpha. If you have any Problems with it, please contact us.\n"+
 					"-----------------------------------------------");
 				}
@@ -62,9 +71,11 @@ public class NUMA {
 //				if (new File("/usr/bin/numactl").exists()) {
 //					return true;
 //				}
-			}
-			catch (IOException ix) {
-				ix.printStackTrace();
+			} catch (IOException ix) {
+				_logger.log(Level.SEVERE, "Could not execute grep command: " + ix, ix);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		return false;
