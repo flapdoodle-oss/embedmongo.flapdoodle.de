@@ -13,31 +13,51 @@ public class JCLStreamListener implements IStreamListener {
 		TRACE {
 			@Override
 			public void log(String prefix, String message, Log logger) {
-				logger.trace(prefix + message);
+				if(prefix != null) {
+					logger.trace(prefix + message);
+				} else {
+					logger.trace(message);
+				}
 			}
 		},
 		DEBUG {
 			@Override
 			public void log(String prefix, String message, Log logger) {
-				logger.debug(prefix + message);
+				if(prefix != null) {
+					logger.debug(prefix + message);
+				} else {
+					logger.debug(message);
+				}
 			}
 		},
 		INFO {
 			@Override
 			public void log(String prefix, String message, Log logger) {
-				logger.info(prefix + message);
+				if(prefix != null) {
+					logger.info(prefix + message);
+				} else {
+					logger.info(message);
+				}
 			}
 		},
 		WARN {
 			@Override
 			public void log(String prefix, String message, Log logger) {
-				logger.warn(prefix + message);
+				if(prefix != null) {
+					logger.warn(prefix + message);
+				} else {
+					logger.warn(message);
+				}
 			}
 		},
 		ERROR {
 			@Override
 			public void log(String prefix, String message, Log logger) {
-				logger.error(prefix + message);
+				if(prefix != null) {
+					logger.error(prefix + message);
+				} else {
+					logger.error(message);
+				}
 			}
 		}
 
