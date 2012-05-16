@@ -2,6 +2,11 @@ package de.flapdoodle.embedmongo.io;
 
 
 
+/**
+ * {@link IStreamListener} using {@link System#err} as a log backend.
+ * 
+ * @author Alexandre Dutra
+ */
 public class StderrStreamListener implements IStreamListener {
 
 	private final String prefix;

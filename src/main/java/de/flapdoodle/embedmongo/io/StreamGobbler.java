@@ -5,6 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/**
+ * Gobbles (consumes and throws away) the output from the underlying stream.
+ * 
+ * @author Alexandre Dutra
+ */
 public class StreamGobbler extends Thread {
 	
 	private final InputStream is;

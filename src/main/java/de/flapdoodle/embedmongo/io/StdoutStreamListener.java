@@ -1,6 +1,11 @@
 package de.flapdoodle.embedmongo.io;
 
 
+/**
+ * {@link IStreamListener} using {@link System#out} as a log backend.
+ * 
+ * @author Alexandre Dutra
+ */
 public class StdoutStreamListener implements IStreamListener {
 
 	private final String prefix;

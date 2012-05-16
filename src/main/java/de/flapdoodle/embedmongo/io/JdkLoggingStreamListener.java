@@ -3,6 +3,12 @@ package de.flapdoodle.embedmongo.io;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+/**
+ * {@link IStreamListener} using java.util.Logging (JUL) as a log backend.
+ * 
+ * @author Alexandre Dutra
+ */
 public class JdkLoggingStreamListener implements IStreamListener {
 
 	private final Logger logger;
@@ -17,6 +23,10 @@ public class JdkLoggingStreamListener implements IStreamListener {
 		this.prefix = prefix;
 	}
 	
+	/**
+	 * @see de.flapdoodle.embedmongo.io.IStreamListener#println(java.lang.String)
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void println(String line) {
 		if(prefix != null) {

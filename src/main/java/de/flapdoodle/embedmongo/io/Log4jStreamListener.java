@@ -4,6 +4,11 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 
+/**
+ * {@link IStreamListener} using Apache Log4J as a log backend.
+ * 
+ * @author Alexandre Dutra
+ */
 public class Log4jStreamListener implements IStreamListener {
 
 	private final Logger logger;
@@ -18,6 +23,10 @@ public class Log4jStreamListener implements IStreamListener {
 		this.prefix = prefix;
 	}
 	
+	/**
+	 * @see de.flapdoodle.embedmongo.io.IStreamListener#println(java.lang.String)
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void println(String line) {
 		if(prefix != null) {

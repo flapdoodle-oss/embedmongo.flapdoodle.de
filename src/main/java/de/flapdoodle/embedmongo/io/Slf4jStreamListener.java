@@ -2,6 +2,11 @@ package de.flapdoodle.embedmongo.io;
 
 import org.slf4j.Logger;
 
+/**
+ * {@link IStreamListener} using SLF4J as a log backend.
+ * 
+ * @author Alexandre Dutra
+ */
 public class Slf4jStreamListener implements IStreamListener {
 
 	public enum Level {
