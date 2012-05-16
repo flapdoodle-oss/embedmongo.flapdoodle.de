@@ -203,11 +203,7 @@ public class MongodProcess {
 			logger.setLevel(Level.OFF);
 			mongo.getDB("admin").command(new BasicDBObject("shutdown",1));
 		} catch (MongoException.Network e) {
-			if(e.getCause() != null && e.getCause() instanceof EOFException) {
-				//OK: the driver is complaining about the server closing the connection abruptly
-			} else {
-				throw e;
-			}
+			//OK: the driver is complaining about the server closing the connection abruptly
 		} finally {
 			logger.setLevel(level);
 			//FIXME Win XP: cleaner threads are not always properly stopped, seems to be a bug in the driver
