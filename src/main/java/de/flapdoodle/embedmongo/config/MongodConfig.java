@@ -24,40 +24,90 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.flapdoodle.embedmongo.Files;
+import de.flapdoodle.embedmongo.MongodProcess;
 import de.flapdoodle.embedmongo.distribution.Version;
 import de.flapdoodle.embedmongo.io.IStreamListener;
+import de.flapdoodle.embedmongo.io.StreamConsumer;
 import de.flapdoodle.embedmongo.io.StreamListenerFactory;
 import de.flapdoodle.embedmongo.runtime.Network;
 
 
+/**
+ * Configuration options for a {@link MongodProcess}.
+ * 
+ * @author Alexandre Dutra
+ */
 public class MongodConfig {
 
+	/**
+	 * Default Mongo port.
+	 */
 	private static final int DEFAULT_PORT = 27017;
 
+	/**
+	 * Default timeout (either for startup and shutdown), in milliseconds.
+	 */
 	private static final long DEFAULT_TIMEOUT = 20000;
 
+	/**
+	 * Default buffer length for {@link StreamConsumer}s.
+	 */
 	private static final int DEFAULT_BUFFER_LENGTH = 512;
 
+	/**
+	 * Mongo version.
+	 */
 	private Version version;
-	
+
+	/**
+	 * Mongo port.
+	 */
 	private int port = DEFAULT_PORT;
 	
+	/**
+	 * The data directory. Will be created if it does not exist.
+	 */
 	private File databaseDir;
 	
+	/**
+	 * Whether this system uses IPV6 protocol. Will default to {@link Network#localhostIsIPv6()}.
+	 */
 	private Boolean ipv6;
 
+	/**
+	 * Whether to redirect Mongod process error stream to standard output.
+	 */
 	private boolean redirectErrorStream = false;
 
+	/**
+	 * {@link IStreamListener} to listen to Mongod process standard output.
+	 */
 	private List<IStreamListener> standardStreamListeners = new ArrayList<IStreamListener>();
 
+	/**
+	 * {@link IStreamListener} to listen to Mongod process error output.
+	 */
 	private List<IStreamListener> errorStreamListeners = new ArrayList<IStreamListener>();
 	
+	/**
+	 * Startup timeout in milliseconds.
+	 */
 	private long startTimeout = DEFAULT_TIMEOUT;
 
+	/**
+	 * Shutdown timeout in milliseconds.
+	 */
 	private long shutdownTimeout = DEFAULT_TIMEOUT;
 	
+	/**
+	 * Stream character encoding. Will default to the platform's default encoding,
+	 * as reported by the system property "file.encoding".
+	 */
 	private String encoding;
-	
+
+	/**
+	 * Buffer length for {@link StreamConsumer}s.
+	 */
 	private int bufferLength = DEFAULT_BUFFER_LENGTH;
 	
 	public MongodConfig() {
@@ -96,6 +146,10 @@ public class MongodConfig {
 		if (databaseDir == null) {
 			//different dir each time
 			return Files.createTempDir("embedmongo-db");
+		}
+		if(!databaseDir.exists()) {
+			if (!databaseDir.mkdirs())
+				throw new IOException("Could not create data directory: " + databaseDir);
 		}
 		return databaseDir;
 	}
