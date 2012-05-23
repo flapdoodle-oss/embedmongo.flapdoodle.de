@@ -34,6 +34,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 
 import de.flapdoodle.embedmongo.config.MongodConfig;
+import de.flapdoodle.embedmongo.distribution.Platform;
 import de.flapdoodle.embedmongo.distribution.Version;
 import de.flapdoodle.embedmongo.runtime.Network;
 
@@ -50,13 +51,24 @@ import de.flapdoodle.embedmongo.runtime.Network;
 public class MongoDBExampleAllVersionsTest {
 	@Parameters
 	public static Collection<Object[]> data() {
+		Platform platform = Platform.detect();
 		Collection<Object[]> result = new ArrayList<Object[]>();
-		for (Version v : Version.values())
+		for (Version v : Version.values()) {
+			
+			//filter out some incompatible combinations
+			
+			//Win XP 32: see https://jira.mongodb.org/browse/SERVER-4863
+			if(platform == Platform.Windows && (v == Version.V2_1_0 || v == Version.V2_1)) {
+				continue;
+			}
+			
+			//Win XP 32: "The procedure entry point ReleaseSRWLockExclusive could not be found in the dynamic link library KERNEL32.dll"
+			if(platform == Platform.Windows && (v == Version.V2_1_1 || v == Version.V2_1)) {
+				continue;
+			}
+			
 			result.add(new Object[] { v });
-		
-		// TODO: reactivate for all versions:
-		result.clear();
-		result.add(new Object[] { Version.V2_0_4 });
+		}
 		return result;
 	}
 
