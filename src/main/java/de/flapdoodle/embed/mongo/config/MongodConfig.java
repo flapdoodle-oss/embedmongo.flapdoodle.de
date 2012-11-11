@@ -39,21 +39,36 @@ public class MongodConfig extends ExecutableProcessConfig {
 	private final int port;
 	private final String databaseDir;
 	private final boolean ipv6;
+	private final boolean configServer;
 
 	public MongodConfig(IVersion version) throws UnknownHostException, IOException {
-		this(version, null, Network.getFreeServerPort(), Network.localhostIsIPv6(), null, null, 0);
+		this(version, null, Network.getFreeServerPort(), Network.localhostIsIPv6(), null, null, 0, false);
 	}
 
 	public MongodConfig(IVersion version, int port, boolean ipv6) {
-		this(version, null, port, ipv6, null, null, 0);
+		this(version, null, port, ipv6, null, null, 0, false);
 	}
 
 	@Deprecated
 	public MongodConfig(IVersion version, int port, boolean ipv6, String databaseDir) {
-		this(version, null, port, ipv6, databaseDir, null, 0);
+		this(version, null, port, ipv6, databaseDir, null, 0, false);
 	}
 
+	/*
+	 * Preferred constructor to Mongod with replicaset
+	 */
 	public MongodConfig(IVersion version, String bindIp, int port, boolean ipv6, String databaseDir, String replSetName, int oplogSize) {
+		this(version, bindIp, port, ipv6, databaseDir, replSetName, oplogSize, false);
+	}
+	
+	/*
+	 * Preferred constructor to Mongod config server
+	 */
+	public MongodConfig(IVersion version, String bindIp, int port, boolean ipv6, String databaseDir, boolean configServer) {
+		this(version, bindIp, port, ipv6, databaseDir, null, 0, false);
+	}
+
+	public MongodConfig(IVersion version, String bindIp, int port, boolean ipv6, String databaseDir, String replSetName, int oplogSize, boolean configServer) {
 		super(version);
 		this.bindIp = bindIp;
 		this.port = port;
@@ -61,6 +76,11 @@ public class MongodConfig extends ExecutableProcessConfig {
 		this.databaseDir = databaseDir;
 		this.replSetName = replSetName;
 		this.oplogSize= oplogSize; 
+		this.configServer= configServer; 
+	}
+
+	public boolean isConfigServer() {
+		return configServer;
 	}
 
 	public int getOplogSize() {
