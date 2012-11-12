@@ -42,14 +42,14 @@ import com.mongodb.Mongo;
 import com.mongodb.util.JSON;
 
 import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.mongo.tests.MongodForTestsFactory;
+import de.flapdoodle.embed.mongo.tests.MongosForTestsFactory;
 
 public class MongodForTestsFactoryTest {
-	private static MongodForTestsFactory testsFactory;
+	private static MongosForTestsFactory testsFactory;
 
 	@BeforeClass
 	public static void setMongoDB() throws IOException {
-		testsFactory = MongodForTestsFactory.with(Version.Main.V2_0);
+		testsFactory = MongosForTestsFactory.with(Version.Main.V2_0);
 	}
 
 	@AfterClass

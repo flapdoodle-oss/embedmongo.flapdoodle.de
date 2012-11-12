@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.process.config.ExecutableProcessConfig;
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.distribution.IVersion;
 import de.flapdoodle.embed.process.runtime.Network;
 
@@ -64,8 +66,8 @@ public class MongodConfig extends ExecutableProcessConfig {
 	/*
 	 * Preferred constructor to Mongod config server
 	 */
-	public MongodConfig(IVersion version, String bindIp, int port, boolean ipv6, String databaseDir, boolean configServer) {
-		this(version, bindIp, port, ipv6, databaseDir, null, 0, false);
+	public static MongodConfig getConfigInstance(IVersion version, int port, boolean ipv6) {
+		return new MongodConfig(version, null, port, ipv6, null, null, 0, true);
 	}
 
 	public MongodConfig(IVersion version, String bindIp, int port, boolean ipv6, String databaseDir, String replSetName, int oplogSize, boolean configServer) {

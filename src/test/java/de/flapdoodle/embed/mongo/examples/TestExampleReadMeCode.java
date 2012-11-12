@@ -45,7 +45,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodProcessOutputConfig;
 import de.flapdoodle.embed.mongo.config.RuntimeConfig;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.mongo.tests.MongodForTestsFactory;
+import de.flapdoodle.embed.mongo.tests.MongosForTestsFactory;
 import de.flapdoodle.embed.process.config.io.ProcessOutput;
 import de.flapdoodle.embed.process.distribution.GenericVersion;
 import de.flapdoodle.embed.process.extract.ITempNaming;
@@ -116,9 +116,9 @@ public class TestExampleReadMeCode extends TestCase {
 	
 	// #### ... with some more help
 	public void testMongodForTests() throws IOException {
-		MongodForTestsFactory factory = null;
+		MongosForTestsFactory factory = null;
 		try {
-			factory = MongodForTestsFactory.with(Version.Main.V2_0);
+			factory = MongosForTestsFactory.with(Version.Main.V2_0);
 
 			Mongo mongo = factory.newMongo();
 			DB db = mongo.getDB("test-" + UUID.randomUUID());
