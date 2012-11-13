@@ -46,7 +46,7 @@ import de.flapdoodle.embed.process.runtime.Network;
 
 /**
  * This class encapsulates everything that would be needed to do embedded
- * MongoDB testing.
+ * MongoDB with sharding testing.
  */
 public class MongosForTestsFactory {
 
