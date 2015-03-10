@@ -42,7 +42,7 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		property(SMALLFILES).setDefault(true);
 		property(NOJOURNAL).setDefault(true);
 		property(ENABLE_TEXTSEARCH).setDefault(false);
-        property(ENABLE_AUTH).setDefault(true);
+        property(ENABLE_AUTH).setDefault(false);
 	}
 
 	public MongoCmdOptionsBuilder useNoPrealloc(boolean value) {

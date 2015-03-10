@@ -126,7 +126,7 @@ public class Mongod extends AbstractMongo {
 				"--dbpath",
 				"" + dbDir.getAbsolutePath()));
 
-        if(config.cmdOptions().enableAuth()){
+        if(!config.cmdOptions().enableAuth()){
             ret.add("--noauth");
         }
 
