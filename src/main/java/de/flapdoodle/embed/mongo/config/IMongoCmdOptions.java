@@ -34,4 +34,6 @@ public interface IMongoCmdOptions {
 	boolean useNoJournal();
 	
 	boolean enableTextSearch();
+
+    boolean enableAuth();
 }

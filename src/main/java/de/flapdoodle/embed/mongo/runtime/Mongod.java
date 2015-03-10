@@ -124,8 +124,11 @@ public class Mongod extends AbstractMongo {
 		List<String> ret = new ArrayList<String>();
 		ret.addAll(Arrays.asList(files.executable().getAbsolutePath(),
 				"--dbpath",
-				"" + dbDir.getAbsolutePath(),
-				"--noauth"));
+				"" + dbDir.getAbsolutePath()));
+
+        if(config.cmdOptions().enableAuth()){
+            ret.add("--noauth");
+        }
 
 		if (config.cmdOptions().useNoPrealloc()) {
 			ret.add("--noprealloc");
