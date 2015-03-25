@@ -31,7 +31,8 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 	protected static final TypedProperty<Boolean> NOPREALLOC = TypedProperty.with("noprealloc", Boolean.class);
 	protected static final TypedProperty<Boolean> SMALLFILES = TypedProperty.with("smallfiles", Boolean.class);
 	protected static final TypedProperty<Boolean> NOJOURNAL = TypedProperty.with("nojournal", Boolean.class);
-	protected static final TypedProperty<Boolean> ENABLE_TEXTSEARCH = TypedProperty.with("enableTextSearch", Boolean.class);
+    protected static final TypedProperty<Boolean> ENABLE_TEXTSEARCH = TypedProperty.with("enableTextSearch", Boolean.class);
+    protected static final TypedProperty<Boolean> ENABLE_AUTH = TypedProperty.with("enableAuth", Boolean.class);
 	
 	
 	public MongoCmdOptionsBuilder() {
@@ -41,6 +42,7 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		property(SMALLFILES).setDefault(true);
 		property(NOJOURNAL).setDefault(true);
 		property(ENABLE_TEXTSEARCH).setDefault(false);
+        property(ENABLE_AUTH).setDefault(false);
 	}
 
 	public MongoCmdOptionsBuilder useNoPrealloc(boolean value) {
@@ -68,8 +70,8 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		return this;
 	}
 
-	public MongoCmdOptionsBuilder enableTextSearch(boolean verbose) {
-		set(ENABLE_TEXTSEARCH, verbose);
+	public MongoCmdOptionsBuilder enableTextSearch(boolean value) {
+		set(ENABLE_TEXTSEARCH, value);
 		return this;
 	}
 	
@@ -78,6 +80,11 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		return this;
 	}
 
+    public MongoCmdOptionsBuilder enableAuth(boolean verbose) {
+        set(ENABLE_AUTH, verbose);
+        return this;
+    }
+
 	@Override
 	public IMongoCmdOptions build() {
 		Integer syncDelay = get(SYNC_DELAY, null);
@@ -85,8 +92,9 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		boolean noPrealloc = get(NOPREALLOC);
 		boolean smallFiles = get(SMALLFILES);
 		boolean noJournal = get(NOJOURNAL);
-		boolean enableTextSearch = get(ENABLE_TEXTSEARCH);
-		return new MongoCmdOptions(syncDelay, verbose, noPrealloc, smallFiles, noJournal, enableTextSearch);
+        boolean enableTextSearch = get(ENABLE_TEXTSEARCH);
+        boolean enableAuth = get(ENABLE_AUTH);
+		return new MongoCmdOptions(syncDelay, verbose, noPrealloc, smallFiles, noJournal, enableTextSearch, enableAuth);
 	}
 
 	static class MongoCmdOptions implements IMongoCmdOptions {
@@ -97,16 +105,18 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		private final boolean _smallFiles;
 		private final boolean _noJournal;
 		private final boolean _enableTextSearch;
+        private final boolean _enableAuth;
 
 
 		public MongoCmdOptions(Integer syncDelay, boolean verbose, boolean noPrealloc, boolean smallFiles,
-		                       boolean noJournal, boolean enableTextSearch) {
+		                       boolean noJournal, boolean enableTextSearch, boolean enableAuth) {
 			_syncDelay = syncDelay;
 			_verbose = verbose;
 			_noPrealloc = noPrealloc;
 			_smallFiles = smallFiles;
 			_noJournal = noJournal;
 			_enableTextSearch = enableTextSearch;
+            _enableAuth = enableAuth;
 		}
 
 		@Override
@@ -138,5 +148,11 @@ public class MongoCmdOptionsBuilder extends AbstractBuilder<IMongoCmdOptions> {
 		public boolean enableTextSearch() {
 			return _enableTextSearch;
 		}
-	}
+
+        @Override
+        public boolean enableAuth() {
+            return _enableAuth;
+        }
+
+    }
 }
