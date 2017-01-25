@@ -117,6 +117,12 @@ public class MongoDBRuntimeTest extends TestCase {
 		if (platform == Platform.FreeBSD) {
 			return true;
 		}
+//		mongodb 3.4 and beyond does not support 32 bit
+		if (bitsize == BitSize.B32 && (currentVersion.equals(Version.V3_4_1.asInDownloadPath()))
+				|| currentVersion.equals(Version.V3_4_1_RC0.asInDownloadPath())
+				|| currentVersion.equals(Version.V3_5_1.asInDownloadPath())) {
+			return true;
+		}
 		return false;
 	}
 
