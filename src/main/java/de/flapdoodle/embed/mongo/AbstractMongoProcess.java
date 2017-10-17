@@ -113,8 +113,11 @@ public abstract class AbstractMongoProcess<T extends IMongoConfig, E extends Exe
 						}
 					}
 				}
-
-				stopProcess();
+				try {
+					stopProcess();
+				} catch (IllegalStateException ise) {
+					// This exception is already logged in stopProcess
+				}
 			}
 		}
 	}
