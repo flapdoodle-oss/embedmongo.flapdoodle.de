@@ -23,28 +23,28 @@ package de.flapdoodle.embed.mongo.config.processlistener;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
+import de.flapdoodle.embed.mongo.util.FileUtils;
 
 
 public class CopyDbFilesIntoDirBeforeProcessStart implements IMongoProcessListener {
 
 	private final File _source;
 	
-	public CopyDbFilesIntoDirBeforeProcessStart(File source) {
+	public CopyDbFilesIntoDirBeforeProcessStart(final File source) {
 		_source=source;
 	}
 
 	@Override
-	public void onBeforeProcessStart(File dbDir, boolean dbDirIsTemp) {
+	public void onBeforeProcessStart(final File dbDir, final boolean dbDirIsTemp) {
 		try {
-			FileUtils.copyDirectory(_source, dbDir);
+			FileUtils.copyDirectory(_source.toPath(), dbDir.toPath());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	public void onAfterProcessStop(File dbDir, boolean dbDirIsTemp) {
+	public void onAfterProcessStop(final File dbDir, final boolean dbDirIsTemp) {
 	}
 
 }

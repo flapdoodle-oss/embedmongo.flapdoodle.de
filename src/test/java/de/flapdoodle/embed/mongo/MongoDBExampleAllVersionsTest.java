@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.mongodb.BasicDBObject;
@@ -55,26 +56,34 @@ import de.flapdoodle.embed.process.runtime.Network;
  */
 @RunWith(value = Parameterized.class)
 public class MongoDBExampleAllVersionsTest {
-	@Parameters
-	public static Collection<Object[]> data() {
-		Collection<Object[]> result = new ArrayList<>();
-		for (IVersion version : Versions.testableVersions(Version.Main.class)) {
-			result.add(new Object[]{version});
+
+	@Parameters(name = "{0}")
+	public static java.util.Collection<Object[]> data() {
+		final Collection<Object[]> result = new ArrayList<>();
+		int unknownId = 0;
+		for (final IVersion version : Versions.testableVersions(Version.Main.class)) {
+			if (version instanceof Enum) {
+				result.add(new Object[]{((Enum) version).name(), version});
+			} else {
+				result.add(new Object[]{"unknown version " + (unknownId++), version});
+			}
 		}
 		return result;
 	}
 
 	private static final int PORT = 12345;
-	private final IFeatureAwareVersion mongoVersion;
+
+	@Parameter
+	public String mongoVersionName;
+
+	@Parameter(value = 1)
+	public IFeatureAwareVersion mongoVersion;
+
 	private MongodExecutable mongodExe;
 	private MongodProcess mongod;
 
 	private Mongo mongo;
 	private static final String DATABASENAME = "mongo_test";
-
-	public MongoDBExampleAllVersionsTest(IFeatureAwareVersion v) {
-		this.mongoVersion = v;
-	}
 
 	@Before
 	public void setUp() throws Exception {

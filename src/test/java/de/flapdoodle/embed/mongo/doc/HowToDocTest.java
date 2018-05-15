@@ -88,7 +88,7 @@ import de.flapdoodle.testdoc.TabSize;
 public class HowToDocTest {
 
 	@ClassRule
-	public static final Recording recording=Recorder.generateMarkDown("Howto.md",TabSize.spaces(2));
+	public static final Recording recording=Recorder.with("Howto.md",TabSize.spaces(2));
 	
 	@Test
 	public void testStandard() throws UnknownHostException, IOException {
