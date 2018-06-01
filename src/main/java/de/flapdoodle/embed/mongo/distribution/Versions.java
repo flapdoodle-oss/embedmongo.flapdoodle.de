@@ -86,9 +86,9 @@ public class Versions {
 			return true;
 		}
 
-        @Override
-        public String toString() {
-           return "GenericFeatureAwareVersion{" + _version.asInDownloadPath() + "}";
+		@Override
+		public String toString() {
+			return "GenericFeatureAwareVersion{" + _version.asInDownloadPath() + "}";
 		}
 
 	}

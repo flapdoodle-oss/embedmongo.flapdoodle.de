@@ -38,12 +38,12 @@ public class VersionsTest {
 	}
 
 	@Test
-    public void toStringOfGenericVersion() {
-      String version = "9.6.9";
-      IFeatureAwareVersion iFeatureAwareVersion = Versions.withFeatures(new GenericVersion(version));
+	public void toStringOfGenericVersion() {
+		String version = "9.6.9";
+		IFeatureAwareVersion iFeatureAwareVersion = Versions.withFeatures(new GenericVersion(version));
 
-      assertThat(iFeatureAwareVersion.toString()).contains(version);
-      assertThat(iFeatureAwareVersion.asInDownloadPath()).isEqualTo(version);
-    }
+		assertThat(iFeatureAwareVersion.toString()).contains(version);
+		assertThat(iFeatureAwareVersion.asInDownloadPath()).isEqualTo(version);
+	}
 
 }
