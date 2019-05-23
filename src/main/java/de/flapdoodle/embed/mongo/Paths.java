@@ -30,6 +30,7 @@ import de.flapdoodle.embed.process.distribution.BitSize;
 import de.flapdoodle.embed.process.distribution.Distribution;
 import de.flapdoodle.embed.process.distribution.IVersion;
 import de.flapdoodle.embed.process.distribution.Platform;
+import de.flapdoodle.embed.process.distribution.Architecture;
 
 /**
  *
@@ -104,7 +105,10 @@ public class Paths implements IPackageResolver {
 		if (distribution.getPlatform() == Platform.OS_X && withSsl(distribution) ) {
             return platformStr + "/mongodb-" + platformStr + "-ssl-" + bitSizeStr + "-" + versionStr + "." + archiveTypeStr;
         }
-
+		// all arm64 distributions has ubuntu prefix
+		if (distribution.getArchitecture() == Architecture.AARCH64 && isFeatureEnabled(distribution, Feature.AARCH64_AVAIL)) {
+            return platformStr + "/mongodb-" + platformStr + "-arm64-ubuntu1604-" + versionStr + "." + archiveTypeStr;
+        }
 		return platformStr + "/mongodb-" + platformStr + "-" + bitSizeStr + "-" + versionStr + "." + archiveTypeStr;
 	}
 
