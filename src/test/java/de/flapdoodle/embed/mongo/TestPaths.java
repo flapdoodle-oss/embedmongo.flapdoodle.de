@@ -21,6 +21,7 @@
 package de.flapdoodle.embed.mongo;
 
 import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.process.distribution.Architecture;
 import de.flapdoodle.embed.process.distribution.BitSize;
 import de.flapdoodle.embed.process.distribution.Distribution;
 import de.flapdoodle.embed.process.distribution.Platform;
@@ -59,6 +60,13 @@ public class TestPaths extends TestCase {
 		checkPath(new Distribution(Version.V1_9_0, Platform.OS_X, BitSize.B32), "osx/mongodb-osx-i386-1.9.0.tgz");
 		checkPath(new Distribution(Version.V1_9_0, Platform.OS_X, BitSize.B64), "osx/mongodb-osx-x86_64-1.9.0.tgz");
 		checkPath(new Distribution(Version.V3_6_0, Platform.OS_X, BitSize.B64), "osx/mongodb-osx-ssl-x86_64-3.6.0.tgz");
+		// arm64 arch tests with explicit arch set
+		checkPath(new Distribution(Version.V3_4_3, Platform.Linux, BitSize.B64, Architecture.AARCH64),
+				"linux/mongodb-linux-arm64-ubuntu1604-3.4.3.tgz");
+		checkPath(new Distribution(Version.V4_0_2, Platform.Linux, BitSize.B64, Architecture.AARCH64),
+				"linux/mongodb-linux-arm64-ubuntu1604-4.0.2.tgz");
+		checkPath(new Distribution(Version.Main.PRODUCTION, Platform.Linux, BitSize.B64, Architecture.AARCH64),
+				"linux/mongodb-linux-arm64-ubuntu1604-4.0.2.tgz");
 	}
 
 	private void checkPath(Distribution distribution, String match) {

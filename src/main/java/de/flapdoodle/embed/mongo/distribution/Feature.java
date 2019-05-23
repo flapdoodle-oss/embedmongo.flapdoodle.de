@@ -35,7 +35,8 @@ public enum Feature {
 	ONLY_WITH_SSL,
 	ONLY_WINDOWS_2008_SERVER,
 	NO_SOLARIS_SUPPORT,
-	NO_BIND_IP_TO_LOCALHOST;
+	NO_BIND_IP_TO_LOCALHOST,
+	AARCH64_AVAIL;
 
 
 	public static EnumSet<Feature> asSet(Feature... features) {
