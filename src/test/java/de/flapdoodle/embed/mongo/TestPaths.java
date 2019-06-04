@@ -66,7 +66,7 @@ public class TestPaths extends TestCase {
 		checkPath(new Distribution(Version.V4_0_2, Platform.Linux, BitSize.B64, Architecture.AARCH64),
 				"linux/mongodb-linux-arm64-ubuntu1604-4.0.2.tgz");
 		checkPath(new Distribution(Version.Main.PRODUCTION, Platform.Linux, BitSize.B64, Architecture.AARCH64),
-				"linux/mongodb-linux-arm64-ubuntu1604-4.0.2.tgz");
+				"linux/mongodb-linux-arm64-ubuntu1604-4.0.9.tgz");
 	}
 
 	private void checkPath(Distribution distribution, String match) {
