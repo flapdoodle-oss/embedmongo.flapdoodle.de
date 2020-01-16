@@ -36,7 +36,10 @@ import de.flapdoodle.embed.process.distribution.Platform;
  */
 public class Paths implements IPackageResolver {
 
-	private final Command command;
+    protected static final String WINDOWS_2012_PLUS_STRING = "2012plus-";
+    protected static final String WINDOWS_2008_PLUS_STRING = "2008plus-";
+    protected static final String WINDOWS_ANY_VERSION_STRING = "";
+    private final Command command;
 
 	public Paths(Command command) {
 		this.command=command;
@@ -97,10 +100,14 @@ public class Paths implements IPackageResolver {
         String bitSizeStr = getBitSize(distribution);
 
         if ((distribution.getBitsize()==BitSize.B64) && (distribution.getPlatform()==Platform.Windows)) {
-				versionStr = (useWindows2008PlusVersion(distribution) ? "2008plus-": "")
+                versionStr = getWindowsMinVersion(distribution)
                         + (withSsl(distribution) ? "ssl-": "")
                         + versionStr;
-		}
+        } else if (distribution.getPlatform()==Platform.Linux) {
+                versionStr = getLinuxPlatform(distribution)
+                        + versionStr;
+        }
+
 		if (distribution.getPlatform() == Platform.OS_X && withSsl(distribution) ) {
             return platformStr + "/mongodb-" + platformStr + "-ssl-" + bitSizeStr + "-" + versionStr + "." + archiveTypeStr;
         }
@@ -181,16 +188,31 @@ public class Paths implements IPackageResolver {
         return sbitSize;
     }
 
-    protected boolean useWindows2008PlusVersion(Distribution distribution) {
-	    String osName = System.getProperty("os.name");
-        if (osName.contains("Windows Server 2008 R2")
+    protected String getWindowsMinVersion(Distribution distribution) {
+        String osName = System.getProperty("os.name");
+        if (osName.contains("Windows Server 2012 R2")
                 || (distribution.getVersion() instanceof IFeatureAwareVersion)
-                && ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.ONLY_WINDOWS_2008_SERVER))  {
-            return true;
+                && ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.ONLY_WINDOWS_2012_SERVER)) {
+            return WINDOWS_2012_PLUS_STRING;
+        } else if (osName.contains("Windows Server 2008 R2")
+                || (distribution.getVersion() instanceof IFeatureAwareVersion)
+                && ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.ONLY_WINDOWS_2008_SERVER)) {
+            return WINDOWS_2008_PLUS_STRING;
+        } else if (osName.contains("Windows 7")) {
+            return WINDOWS_2008_PLUS_STRING;
         } else {
-            return osName.contains("Windows 7");
+            return WINDOWS_ANY_VERSION_STRING;
         }
-	}
+    }
+
+    protected String getLinuxPlatform(Distribution distribution) {
+        if ((distribution.getVersion() instanceof IFeatureAwareVersion)
+                && ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.NO_GENERIC_LINUX)) {
+            return "rhel70-";
+        }
+
+        return "";
+    }
 
 	protected boolean withSsl(Distribution distribution) {
         if ((distribution.getPlatform() == Platform.Windows || distribution.getPlatform() == Platform.OS_X)

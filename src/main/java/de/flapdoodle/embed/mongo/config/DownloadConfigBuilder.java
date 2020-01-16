@@ -26,7 +26,6 @@ import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.Paths;
 import de.flapdoodle.embed.process.config.store.IDownloadPath;
 import de.flapdoodle.embed.process.distribution.Distribution;
-import de.flapdoodle.embed.process.distribution.Platform;
 import de.flapdoodle.embed.process.extract.UUIDTempNaming;
 import de.flapdoodle.embed.process.io.directories.FixedPath;
 import de.flapdoodle.embed.process.io.directories.IDirectory;
@@ -77,9 +76,6 @@ public class DownloadConfigBuilder extends de.flapdoodle.embed.process.config.st
 
 		@Override
 		public String getPath(Distribution distribution) {
-			if (distribution.getPlatform()==Platform.Windows) {
-				return "https://downloads.mongodb.org/";
-			}
 			return "https://fastdl.mongodb.org/";
 		}
 		

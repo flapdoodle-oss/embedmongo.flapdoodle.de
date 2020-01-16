@@ -36,8 +36,8 @@ public class TestPaths extends TestCase {
 		super.setUp();
 		paths=new Paths(Command.MongoD) {
 			@Override
-			protected boolean useWindows2008PlusVersion(Distribution distribution) {
-				return false;
+			protected String getWindowsMinVersion(Distribution distribution) {
+				return WINDOWS_ANY_VERSION_STRING;
 			}
 		};
 	}
