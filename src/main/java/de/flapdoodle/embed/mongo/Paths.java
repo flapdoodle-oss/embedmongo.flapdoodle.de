@@ -22,6 +22,7 @@ package de.flapdoodle.embed.mongo;
 
 import de.flapdoodle.embed.mongo.distribution.Feature;
 import de.flapdoodle.embed.mongo.distribution.IFeatureAwareVersion;
+import de.flapdoodle.embed.mongo.util.LinuxDistribution;
 import de.flapdoodle.embed.process.config.store.FileSet;
 import de.flapdoodle.embed.process.config.store.FileType;
 import de.flapdoodle.embed.process.config.store.IPackageResolver;
@@ -30,6 +31,11 @@ import de.flapdoodle.embed.process.distribution.BitSize;
 import de.flapdoodle.embed.process.distribution.Distribution;
 import de.flapdoodle.embed.process.distribution.IVersion;
 import de.flapdoodle.embed.process.distribution.Platform;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.*;
 
 /**
  *
@@ -205,10 +211,56 @@ public class Paths implements IPackageResolver {
         }
     }
 
+    private String closestLinuxPlatform(List<String> platforms, String version) {
+        if (platforms.isEmpty()) {
+            return "";
+        }
+
+        for (String platform : platforms) {
+            List<LinuxDistribution> candidates = LinuxDistribution.match(platform);
+            if (!candidates.isEmpty()) {
+                String[] versionComponents = version.split("\\.");
+                int versionMajor = Integer.parseInt(versionComponents[0], 10);
+                Optional<LinuxDistribution> matchingDistro = candidates.stream()
+                        .filter(c -> c.getMajor() <= versionMajor)
+                        .max(Comparator.comparingInt(LinuxDistribution::getMajor).thenComparingInt(LinuxDistribution::getMinor));
+
+                if (matchingDistro.isPresent()) {
+                    return matchingDistro.get().getPlatform() + "-";
+                }
+            }
+        }
+
+        return "";
+    }
+
     protected String getLinuxPlatform(Distribution distribution) {
         if ((distribution.getVersion() instanceof IFeatureAwareVersion)
                 && ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.NO_GENERIC_LINUX)) {
-            return "rhel70-";
+            File osRelease = new File("/etc/os-release");
+            if (osRelease.exists()) {
+                // Attempt to derive the specific linux platform from the OS release information
+                try {
+                    List<String> lines = Files.readAllLines(osRelease.toPath());
+                    List<String> possiblePlatforms = new ArrayList<>();
+                    String version = null;
+                    for (String line : lines) {
+                        if (line.startsWith("ID=")) {
+                            String value = line.substring(3).replaceAll("\"", "").trim();
+                            possiblePlatforms.add(0, value);
+                        } else if (line.startsWith("ID_LIKE=")) {
+                            String value = line.substring(8).replaceAll("\"", "").trim();
+                            possiblePlatforms.addAll(Arrays.asList(value.split(" ")));
+                        } else if (line.startsWith("VERSION_ID=")) {
+                            version = line.substring(11).replaceAll("\"", "").trim();
+                        }
+                    }
+
+                    return closestLinuxPlatform(possiblePlatforms, version);
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
         }
 
         return "";
