@@ -87,8 +87,13 @@ public class MongoDBRuntimeTest {
 								.defaults()
 								.packageResolver(new Paths(Command.MongoD) {
 										@Override
-										protected boolean useWindows2008PlusVersion(Distribution distribution) {
-											return true;
+										protected String getWindowsMinVersion(Distribution distribution) {
+											if ((distribution.getVersion() instanceof IFeatureAwareVersion)
+													&& ((IFeatureAwareVersion) distribution.getVersion()).enabled(Feature.ONLY_WINDOWS_2012_SERVER)) {
+												return WINDOWS_2012_PLUS_STRING;
+											} else {
+												return WINDOWS_2008_PLUS_STRING;
+											}
 										}
 									}))).build();
 		
@@ -114,7 +119,7 @@ public class MongoDBRuntimeTest {
 			// there is no osx 32bit version for v2.2.1 and above, so we dont check
 			return true;
 		}
-		if ((platform == Platform.Solaris)  && (bitsize == BitSize.B32) || version.enabled(Feature.NO_SOLARIS_SUPPORT)) {
+		if ((platform == Platform.Solaris)  && ((bitsize == BitSize.B32) || version.enabled(Feature.NO_SOLARIS_SUPPORT))) {
 			return true;
 		}
 		if (platform == Platform.FreeBSD) {
