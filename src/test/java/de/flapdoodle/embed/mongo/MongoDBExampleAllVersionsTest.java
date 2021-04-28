@@ -20,6 +20,8 @@
  */
 package de.flapdoodle.embed.mongo;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -86,10 +88,12 @@ public class MongoDBExampleAllVersionsTest {
 
 	@Before
 	public void setUp() throws Exception {
-
 		MongodStarter runtime = MongodStarter.getDefaultInstance();
-		mongodExe = runtime.prepare(MongodConfig.builder().version(this.mongoVersion).net(new Net(PORT,
-				Network.localhostIsIPv6())).build());
+		mongodExe = runtime.prepare(MongodConfig.builder()
+				.version(this.mongoVersion)
+				.net(new Net(PORT, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(mongoVersion))
+				.build());
 		mongod = mongodExe.start();
 
 		mongo = new MongoClient(new ServerAddress(Network.getLocalHost(), PORT));

@@ -20,6 +20,7 @@
  */
 package de.flapdoodle.embed.mongo;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -58,7 +59,12 @@ public class MongoDumpExecutableTest {
         net = new Net(Network.getLocalHost().getHostAddress(),
                 Network.getFreeServerPort(),
                 Network.localhostIsIPv6());
-        MongodConfig mongodConfig = MongodConfig.builder().version(Version.Main.PRODUCTION).net(net).build();
+        final Version.Main version = Version.Main.PRODUCTION;
+        MongodConfig mongodConfig = MongodConfig.builder()
+                .version(version)
+                .cmdOptions(getCmdOptions(version))
+                .net(net)
+                .build();
 
         RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD).build();
         mongodExe = MongodStarter.getInstance(runtimeConfig).prepare(mongodConfig);
@@ -78,8 +84,10 @@ public class MongoDumpExecutableTest {
 
     @Test
     public void testStartMongoDump() throws IOException {
+        final Version.Main version = Version.Main.PRODUCTION;
         MongoDumpConfig mongoDumpConfig = MongoDumpConfig.builder()
-                .version(Version.Main.PRODUCTION)
+                .version(version)
+                .cmdOptions(getCmdOptions(version))
                 .net(net)
                 .out(temp.getRoot().getAbsolutePath())
                 .build();
@@ -90,8 +98,10 @@ public class MongoDumpExecutableTest {
 
     @Test
     public void testStartMongoDumpToArchive() throws IOException {
+        final Version.Main version = Version.Main.PRODUCTION;
         MongoDumpConfig mongoDumpConfig = MongoDumpConfig.builder()
-                .version(Version.Main.PRODUCTION)
+                .version(version)
+                .cmdOptions(getCmdOptions(version))
                 .net(net)
                 .archive(temp.getRoot().getAbsolutePath())
                 .build();

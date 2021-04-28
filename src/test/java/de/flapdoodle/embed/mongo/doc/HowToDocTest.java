@@ -20,6 +20,7 @@
  */
 package de.flapdoodle.embed.mongo.doc;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
@@ -30,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import de.flapdoodle.embed.mongo.TestUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -89,14 +91,16 @@ public class HowToDocTest {
 	public static final Recording recording=Recorder.with("Howto.md",TabSize.spaces(2));
 	
 	@Test
-	public void testStandard() throws UnknownHostException, IOException {
+	public void testStandard() throws IOException {
 		recording.begin();
 		MongodStarter starter = MongodStarter.getDefaultInstance();
 
 		int port = Network.getFreeServerPort();
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+				.version(version)
 				.net(new Net(port, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 
 		MongodExecutable mongodExecutable = null;
@@ -118,7 +122,7 @@ public class HowToDocTest {
 	}
 
 	@Test
-	public void testCustomMongodFilename() throws UnknownHostException, IOException {
+	public void testCustomMongodFilename() throws IOException {
 		recording.begin();		
 		int port = Network.getFreeServerPort();
 
@@ -130,9 +134,11 @@ public class HowToDocTest {
 				.executableNaming(new UserTempNaming()))
 		.build();
 
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+				.version(version)
 				.net(new Net(port, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
@@ -210,9 +216,11 @@ public class HowToDocTest {
 	
 	@Test
 	public void testCustomizeArtifactStorage() throws IOException {
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+				.version(version)
 				.net(new Net(Network.getFreeServerPort(), Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 
 		// ->
@@ -247,8 +255,11 @@ public class HowToDocTest {
 		// ->
 		// ...
 		recording.begin();
-		ProcessOutput processOutput = new ProcessOutput(Processors.namedConsole("[mongod>]"),
-				Processors.namedConsole("[MONGOD>]"), Processors.namedConsole("[console>]"));
+		ProcessOutput processOutput = ProcessOutput.builder()
+				.output(Processors.namedConsole("[mongod>]"))
+				.error(Processors.namedConsole("[MONGOD>]"))
+				.commands(Processors.namedConsole("[console>]"))
+				.build();
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD)
 				.processOutput(processOutput)
@@ -272,7 +283,12 @@ public class HowToDocTest {
 		StreamProcessor commandsOutput = Processors.namedConsole("[console>]");
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD)
-				.processOutput(new ProcessOutput(mongodOutput, mongodError, commandsOutput))
+				.processOutput(ProcessOutput.builder()
+					.output(mongodOutput)
+					.error(mongodError)
+					.commands(commandsOutput)
+					.build()
+				)
 				.build();
 
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
@@ -288,8 +304,11 @@ public class HowToDocTest {
 		recording.begin();
 		Logger logger = LoggerFactory.getLogger(getClass().getName());
 
-		ProcessOutput processOutput = new ProcessOutput(Processors.logTo(logger, Slf4jLevel.INFO), Processors.logTo(logger,
-				Slf4jLevel.ERROR), Processors.named("[console>]", Processors.logTo(logger, Slf4jLevel.DEBUG)));
+		ProcessOutput processOutput = ProcessOutput.builder()
+			.output(Processors.logTo(logger, Slf4jLevel.INFO))
+			.error(Processors.logTo(logger, Slf4jLevel.ERROR))
+			.commands(Processors.named("[console>]", Processors.logTo(logger, Slf4jLevel.DEBUG)))
+			.build();
 		
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD, logger)
@@ -326,9 +345,11 @@ public class HowToDocTest {
 	@Test
 	public void testDefaultOutputToNone() throws IOException {
 		int port = 12345;
+		final IFeatureAwareVersion version = Versions.withFeatures(genericVersion("2.7.1"), Feature.SYNC_DELAY);
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Versions.withFeatures(genericVersion("2.7.1"), Feature.SYNC_DELAY))
+				.version(version)
 				.net(new Net(port, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 		// ->
 		// ...
@@ -336,7 +357,7 @@ public class HowToDocTest {
 		Logger logger = LoggerFactory.getLogger(getClass().getName());
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD, logger)
-				.processOutput(ProcessOutput.getDefaultInstanceSilent())
+				.processOutput(ProcessOutput.silent())
 				.build();
 
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
@@ -376,9 +397,11 @@ public class HowToDocTest {
 		// ...
 		recording.begin();
 		int port = 12345;
+		final IFeatureAwareVersion version = Versions.withFeatures(de.flapdoodle.embed.process.distribution.Version.of("2.7.1"), Feature.SYNC_DELAY);
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Versions.withFeatures(de.flapdoodle.embed.process.distribution.Version.of("2.7.1"), Feature.SYNC_DELAY))
+				.version(version)
 				.net(new Net(port, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 
 		MongodStarter runtime = MongodStarter.getDefaultInstance();
@@ -453,7 +476,11 @@ public class HowToDocTest {
 		// ->
 		// ...
 		recording.begin();
-		MongodConfig mongodConfig = MongodConfig.builder().version(Version.Main.PRODUCTION).build();
+		final Version.Main version = Version.Main.PRODUCTION;
+		MongodConfig mongodConfig = MongodConfig.builder()
+				.version(version)
+				.cmdOptions(getCmdOptions(version))
+				.build();
 
 		MongodStarter runtime = MongodStarter.getDefaultInstance();
 
@@ -493,9 +520,11 @@ public class HowToDocTest {
 		// ->
 		// ...
 		recording.begin();
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+				.version(version)
 				.timeout(new Timeout(30000))
+				.cmdOptions(getCmdOptions(version))
 				.build();
 		recording.end();
 		// ...
@@ -537,7 +566,7 @@ public class HowToDocTest {
 	// <-
 	 */
 	@Test
-	public void testCommandLineOptions() throws UnknownHostException, IOException {
+	public void testCommandLineOptions() {
 		// ->
 		recording.begin();
 		MongodConfig mongodConfig = MongodConfig.builder()
@@ -563,7 +592,7 @@ public class HowToDocTest {
 	// <-
 	 */
 	@Test
-	public void testSnapshotDbFiles() throws UnknownHostException, IOException {
+	public void testSnapshotDbFiles() {
 		File destination = null;
 		// ->
 		recording.begin();
@@ -572,6 +601,8 @@ public class HowToDocTest {
 				.processListener(new CopyDbFilesFromDirBeforeProcessStop(destination))
 				.cmdOptions(MongoCmdOptions.builder()
 						.useDefaultSyncDelay(true)
+						.useNoPrealloc(false)
+						.useSmallFiles(false)
 						.build())
 				.build();
 		recording.end();
@@ -590,9 +621,11 @@ public class HowToDocTest {
 		// ->
 		recording.begin();
 		Storage replication = new Storage("/custom/databaseDir",null,0);
-		
+
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongodConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+				.version(version)
+				.cmdOptions(getCmdOptions(version))
 				.replication(replication)
 				.build();
 		recording.end();
@@ -625,8 +658,10 @@ public class HowToDocTest {
 		String database = "importTestDB";
 		String collection = "importedCollection";
 
-		MongodConfig mongoConfigConfig = MongodConfig.builder()
-				.version(Version.Main.PRODUCTION)
+	  final Version.Main version = Version.Main.PRODUCTION;
+	  MongodConfig mongoConfigConfig = MongodConfig.builder()
+				.version(version)
+			  	.cmdOptions(getCmdOptions(version))
 				.net(new Net(defaultConfigPort, Network.localhostIsIPv6()))
 				.build();
 
@@ -635,7 +670,7 @@ public class HowToDocTest {
 
 		try {
 			MongoImportConfig mongoImportConfig = MongoImportConfig.builder()
-					.version(Version.Main.PRODUCTION)
+					.version(version)
 					.net(new Net(defaultConfigPort, Network.localhostIsIPv6()))
 					.databaseName(database)
 					.collectionName(collection)

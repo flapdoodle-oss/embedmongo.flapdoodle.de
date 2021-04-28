@@ -20,9 +20,12 @@
  */
 package de.flapdoodle.embed.mongo.examples;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import de.flapdoodle.embed.mongo.TestUtils;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -49,7 +52,7 @@ public class StartMongoDBServerAndMongoShellClientTest {
 	 // <- 
 	 */
 	@Test
-	public void startAndStopMongoDBAndMongoShell() throws UnknownHostException, IOException {
+	public void startAndStopMongoDBAndMongoShell() throws IOException {
 			// ->
 		int port = Network.getFreeServerPort();
 		String defaultHost = "localhost";
@@ -88,9 +91,11 @@ public class StartMongoDBServerAndMongoShellClientTest {
 		return mongos;
 	}
 
-	private MongodProcess startMongod(int defaultConfigPort) throws UnknownHostException, IOException {
+	private MongodProcess startMongod(int defaultConfigPort) throws IOException {
+		final Version.Main version = Version.Main.PRODUCTION;
 		MongodConfig mongoConfigConfig = MongodConfig.builder()
-			.version(Version.Main.PRODUCTION)
+			.version(version)
+			.cmdOptions(getCmdOptions(version))
 			.net(new Net(defaultConfigPort, Network.localhostIsIPv6()))
 			.build();
 

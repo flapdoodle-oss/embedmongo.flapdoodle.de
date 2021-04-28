@@ -26,7 +26,7 @@ import java.util.EnumSet;
 public enum Feature {
 	SYNC_DELAY, 
 	TEXT_SEARCH /* enabled by default in mongodb >=2.6 */,
-	STORAGE_ENGINE /* with >=3.0, default changhed with 3.2 */,
+	STORAGE_ENGINE /* with >=3.0, default changed with 3.2 */,
 	ONLY_64BIT /* mongodb 3.4 and beyond does not support 32 bit */, 
 	NO_CHUNKSIZE_ARG /*mongos since 3.4? does not support --chunkSize argument */, 
 	MONGOS_CONFIGDB_SET_STYLE /* mongos since 3.3.? */,
@@ -34,8 +34,12 @@ public enum Feature {
 
 	ONLY_WITH_SSL,
 	ONLY_WINDOWS_2008_SERVER,
+	ONLY_WINDOWS_2012_SERVER,
 	NO_SOLARIS_SUPPORT,
-	NO_BIND_IP_TO_LOCALHOST;
+	NO_BIND_IP_TO_LOCALHOST,
+
+	LINUX_AARCH64
+	;
 
 
 	public static EnumSet<Feature> asSet(Feature... features) {

@@ -20,28 +20,29 @@
  */
 package de.flapdoodle.embed.mongo;
 
-import java.util.Collection;
-import java.util.Comparator;
-
+import de.flapdoodle.embed.mongo.config.ImmutableMongoCmdOptions;
+import de.flapdoodle.embed.mongo.config.MongoCmdOptions;
 import de.flapdoodle.embed.mongo.distribution.IFeatureAwareVersion;
-import de.flapdoodle.embed.process.distribution.Version;
+import junit.framework.TestCase;
 
-public class Versions {
+/**
+ * A base class for all tests which create Mongod.
+ *
+ * <p>It provides logic for deciding what command line options to use for
+ * the different Mongo server versions.</p>
+ */
+public abstract class TestUtils {
 
-	private Versions() {
-		// no instance
-	}
+    private TestUtils() {}
 
-	public static <T extends Enum<T> & IFeatureAwareVersion> Collection<T> testableVersions(Class<T> type) {
-		return Enums.unique(Enums.filter(Enums.values(type), new Enums.NotDeprecated<>(type)), new IVersionComparator<>());
-	}
+    public static MongoCmdOptions getCmdOptions(IFeatureAwareVersion version) {
+        final ImmutableMongoCmdOptions.Builder cmdOptions = MongoCmdOptions.builder();
+        if (version.isNewerOrEqual(4, 2, 0)) {
+            cmdOptions
+                .useNoPrealloc(false)
+                .useSmallFiles(false);
+        }
+        return cmdOptions.build();
+    }
 
-	static class IVersionComparator<T extends Enum<T> & Version> implements Comparator<T> {
-
-		@Override
-		public int compare(T o1, T o2) {
-			return o1.asInDownloadPath().compareTo(o2.asInDownloadPath());
-		}
-
-	}
 }

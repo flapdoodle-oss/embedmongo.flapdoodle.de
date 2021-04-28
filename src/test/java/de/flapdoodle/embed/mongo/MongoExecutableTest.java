@@ -20,6 +20,7 @@
  */
 package de.flapdoodle.embed.mongo;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
@@ -58,7 +59,13 @@ public class MongoExecutableTest {
 		boolean useMongodb = true;
 		int loops = 10;
 
-		MongodConfig mongodConfig = MongodConfig.builder().version(Version.Main.PRODUCTION).stopTimeoutInMillis(5L).net(new Net(Network.getFreeServerPort(), Network.localhostIsIPv6())).build();
+		final Version.Main version = Version.Main.PRODUCTION;
+		MongodConfig mongodConfig = MongodConfig.builder()
+				.version(version)
+				.stopTimeoutInMillis(5L)
+				.net(new Net(Network.getFreeServerPort(), Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
+				.build();
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD).build();
 
@@ -86,8 +93,13 @@ public class MongoExecutableTest {
 	@Test
 	public void testStartMongodOnNonFreePort() throws IOException, InterruptedException {
 		int port = Network.getFreeServerPort();
-		
-		MongodConfig mongodConfig = MongodConfig.builder().version(Version.Main.PRODUCTION).net(new Net(port, Network.localhostIsIPv6())).build();
+
+		final Version.Main version = Version.Main.PRODUCTION;
+		MongodConfig mongodConfig = MongodConfig.builder()
+				.version(version)
+				.net(new Net(port, Network.localhostIsIPv6()))
+				.cmdOptions(getCmdOptions(version))
+				.build();
 
 		RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD).build();
 

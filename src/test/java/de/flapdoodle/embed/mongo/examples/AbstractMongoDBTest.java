@@ -20,12 +20,15 @@
  */
 package de.flapdoodle.embed.mongo.examples;
 
+import static de.flapdoodle.embed.mongo.TestUtils.getCmdOptions;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
+import de.flapdoodle.embed.mongo.TestUtils;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -72,8 +75,10 @@ public abstract class AbstractMongoDBTest extends TestCase {
 	}
 
 	protected ImmutableMongodConfig.Builder createMongodConfigBuilder() throws UnknownHostException, IOException {
+		final Version.Main version = Version.Main.PRODUCTION;
 		return MongodConfig.builder()
-			.version(Version.Main.PRODUCTION)
+			.version(version)
+			.cmdOptions(getCmdOptions(version))
 			.net(new Net(port, Network.localhostIsIPv6()));
 	}
 
